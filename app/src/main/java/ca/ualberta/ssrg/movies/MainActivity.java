@@ -9,8 +9,13 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import org.apache.http.client.methods.HttpPost;
+
 import ca.ualberta.ssrg.androidelasticsearch.R;
 import ca.ualberta.ssrg.movies.es.ESMovieManager;
 import ca.ualberta.ssrg.movies.es.Movie;
@@ -24,6 +29,8 @@ public class MainActivity extends Activity {
 	private ArrayAdapter<Movie> moviesViewAdapter;
 	private ESMovieManager movieManager;
 	private MoviesController moviesController;
+	private EditText searchInput;
+
 
 	private Context mContext = this;
 
@@ -74,7 +81,11 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		
+
+
+		SearchThread thread = new SearchThread("");
+
+		thread.start(); 		//android will switch threads and then call the run
 		
 
 		// Refresh the list when visible
@@ -100,8 +111,16 @@ public class MainActivity extends Activity {
 	 * Search for movies with a given word(s) in the text view
 	 * @param view
 	 */
+	// did this in lab 
 	public void search(View view) {
 		movies.clear();
+
+		searchInput = (EditText) findViewById(R.id.editText1);
+
+
+		SearchThread thread = new SearchThread(searchInput.getText().toString());
+
+		thread.start();
 
 		// TODO: Extract search query from text view
 		
@@ -130,9 +149,20 @@ public class MainActivity extends Activity {
 	}
 
 
-	class SearchThread extends Thread {
+	class SearchThread extends Thread {			//write the code that runs in the other thread
 		// TODO: Implement search thread
-		
+		private String search;
+
+		public SearchThread(String search){
+			this.search = search;
+		}
+
+		@Override
+		public void run(){
+			movies.clear();
+			movies.addAll(movieManager.searchMovies(search, null));
+			notifyUpdated();
+		}
 	}
 
 	
